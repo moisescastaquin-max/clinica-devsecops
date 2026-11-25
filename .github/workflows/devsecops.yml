@@ -1,16 +1,16 @@
-name: devsecops
-on: push
+name: DevSecOps
+
+on: [push, pull_request]
 
 jobs:
   sast:
     runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install semgrep
-      - run: semgrep scan --config rules/sql-taint.yml --error --metrics=off .
+      - name: SAST con Semgrep
+        run: semgrep scan --config .semgrep/sql.yml --error
 
   dependencias:
     runs-on: ubuntu-latest
@@ -18,14 +18,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: npm install --package-lock-only
-      - run: npm audit --audit-level=high
+          node-version: 22
+      - name: Resolver dependencias
+        run: npm install --package-lock-only
       - name: Generar SBOM con Trivy
-        if: always()
-        run: docker run --rm -v "$PWD":/work aquasec/trivy:latest fs --format cyclonedx --output /work/sbom.json /work
-      - uses: actions/upload-artifact@v4
-        if: always()
+        run: docker run --rm -v "$PWD:/src" aquasec/trivy:latest fs --format cyclonedx --output /src/sbom.json /src
+      - name: Guardar SBOM
+        uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom.json
+      - name: Gate de dependencias
+        run: npm audit --audit-level=high
