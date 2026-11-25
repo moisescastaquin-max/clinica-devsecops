@@ -9,14 +9,7 @@ const db = mysql.createConnection({
 });
 
 app.get('/pacientes/:id', (req, res) => {
-  const consulta = "SELECT * FROM pacientes WHERE id = ?";
-  
-  db.query(consulta, [req.params.id], (err, filas) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error en la consulta' });
-    }
-    res.json(filas);
-  });
+  db.query("SELECT * FROM pacientes WHERE id = ?", [req.params.id], (err, filas) => res.json(filas));
 });
 
 app.listen(3000);
