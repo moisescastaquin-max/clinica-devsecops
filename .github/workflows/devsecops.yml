@@ -23,12 +23,7 @@ jobs:
       - run: npm audit --audit-level=high
       - name: Generar SBOM con Trivy
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: cyclonedx
-          output: sbom.json
+        run: docker run --rm -v "$PWD":/work aquasec/trivy:latest fs --format cyclonedx --output /work/sbom.json /work
       - uses: actions/upload-artifact@v4
         if: always()
         with:
